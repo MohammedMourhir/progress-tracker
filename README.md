@@ -1,2 +1,0 @@
-# progress-tracker
-hooray
