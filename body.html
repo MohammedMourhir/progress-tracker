@@ -1,0 +1,259 @@
+[file name]: body.html
+[file content begin]
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Score Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- JSON Import Modal -->
+    <div class="modal" id="jsonModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-file-import"></i> JSON Import System</h3>
+                <button class="close-modal" onclick="closeJsonModal()">&times;</button>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('buttons')">
+                    <i class="fas fa-plus-circle"></i> Import Buttons
+                </button>
+                <button class="tab-btn" onclick="switchTab('store')">
+                    <i class="fas fa-store"></i> Import Store Items
+                </button>
+                <button class="tab-btn" onclick="switchTab('template')">
+                    <i class="fas fa-file-code"></i> JSON Templates
+                </button>
+            </div>
+            
+            <div class="tab-content active" id="buttonsTab">
+                <h4><i class="fas fa-upload"></i> Import Buttons from JSON</h4>
+                <p class="description">Paste JSON data with button definitions below</p>
+                <textarea id="buttonsJson" placeholder='Example: {"buttons": [{"type": "good", "name": "Exercise", "value": 5}]}'></textarea>
+                <div class="modal-actions">
+                    <button class="btn primary" onclick="importButtonsFromJson()">
+                        <i class="fas fa-file-import"></i> Import Buttons
+                    </button>
+                    <button class="btn secondary" onclick="pasteTemplate('buttons')">
+                        <i class="fas fa-magic"></i> Use Example
+                    </button>
+                    <button class="btn" onclick="document.getElementById('buttonsJson').value=''">
+                        <i class="fas fa-eraser"></i> Clear
+                    </button>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="storeTab">
+                <h4><i class="fas fa-store"></i> Import Store Items from JSON</h4>
+                <p class="description">Paste JSON data with store item definitions below</p>
+                <textarea id="storeJson" placeholder='Example: {"storeItems": [{"name": "Dark Theme", "price": 100}]}'></textarea>
+                <div class="modal-actions">
+                    <button class="btn primary" onclick="importStoreFromJson()">
+                        <i class="fas fa-file-import"></i> Import Store Items
+                    </button>
+                    <button class="btn secondary" onclick="pasteTemplate('store')">
+                        <i class="fas fa-magic"></i> Use Example
+                    </button>
+                    <button class="btn" onclick="document.getElementById('storeJson').value=''">
+                        <i class="fas fa-eraser"></i> Clear
+                    </button>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="templateTab">
+                <h4><i class="fas fa-file-code"></i> JSON Templates for AI</h4>
+                <p class="description">Copy these templates and ask AI to fill them with your content</p>
+                
+                <div class="template-section">
+                    <h5><i class="fas fa-plus-circle"></i> Buttons Template</h5>
+                    <div class="code-block">
+                        <pre id="buttonsTemplate"></pre>
+                        <button class="btn copy-btn" onclick="copyTemplate('buttons')">
+                            <i class="far fa-copy"></i> Copy
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="template-section">
+                    <h5><i class="fas fa-store"></i> Store Items Template</h5>
+                    <div class="code-block">
+                        <pre id="storeTemplate"></pre>
+                        <button class="btn copy-btn" onclick="copyTemplate('store')">
+                            <i class="far fa-copy"></i> Copy
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="tip">
+                    <i class="fas fa-lightbulb"></i>
+                    <span><strong>Pro Tip:</strong> Give this template to AI and say: "Fill this with [your theme] content"</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Store Panel -->
+    <div class="store-panel" id="storePanel">
+        <div class="store-header">
+            <h2><i class="fas fa-store"></i> Store</h2>
+            <div class="store-controls">
+                <button class="btn store-action" onclick="addStoreItem()">
+                    <i class="fas fa-plus"></i> Add Item
+                </button>
+                <button class="btn store-action" onclick="openJsonModal()">
+                    <i class="fas fa-file-import"></i> Import JSON
+                </button>
+                <button class="close-store" onclick="toggleStore()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="store-content">
+            <div class="store-items" id="storeItems">
+                <!-- Store items will be loaded here -->
+            </div>
+            
+            <div class="store-footer">
+                <div class="store-balance">
+                    <p><i class="fas fa-coins"></i> Your Score: <span id="storeScore">0</span></p>
+                </div>
+                <button class="btn export-btn" onclick="exportStoreItems()">
+                    <i class="fas fa-file-export"></i> Export Store Data
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-gamepad"></i> Score Tracker</h2>
+        </div>
+        
+        <div class="sidebar-content">
+            <!-- Progress & Stats Section -->
+            <div class="section">
+                <h3><i class="fas fa-chart-line"></i> Progress & Stats</h3>
+                <div class="stats-box">
+                    <div class="stat-item">
+                        <div class="stat-label">Level</div>
+                        <div class="stat-value" id="levelDisplay">1</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Streak</div>
+                        <div class="stat-value" id="streakDisplay">0</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3><i class="fas fa-store"></i> Store</h3>
+                <button class="sidebar-btn" onclick="toggleStore()">
+                    <i class="fas fa-shopping-cart"></i> Open Store
+                </button>
+            </div>
+            
+            <div class="section">
+                <h3><i class="fas fa-plus-circle"></i> Add Actions</h3>
+                <button class="sidebar-btn good" onclick="addButton('good')">
+                    <i class="fas fa-plus"></i> Add Good Action
+                </button>
+                <button class="sidebar-btn bad" onclick="addButton('bad')">
+                    <i class="fas fa-minus"></i> Add Bad Action
+                </button>
+            </div>
+            
+            <div class="section">
+                <h3><i class="fas fa-database"></i> Data Management</h3>
+                <button class="sidebar-btn" onclick="openJsonModal()">
+                    <i class="fas fa-file-import"></i> Import JSON
+                </button>
+                <button class="sidebar-btn" onclick="exportData()">
+                    <i class="fas fa-file-export"></i> Export All Data
+                </button>
+                <button class="sidebar-btn" onclick="importData()">
+                    <i class="fas fa-file-upload"></i> Import Backup
+                </button>
+                <button class="sidebar-btn delete" onclick="clearAllData()">
+                    <i class="fas fa-trash"></i> Reset All Data
+                </button>
+            </div>
+            
+            <div class="section">
+                <h3><i class="fas fa-question-circle"></i> Help</h3>
+                <button class="sidebar-btn" onclick="showControlsHelp()">
+                    <i class="fas fa-info-circle"></i> Show Controls
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Progress Section -->
+        <div class="progress-section">
+            <div class="progress-container">
+                <div class="progress-header">
+                    <h3><i class="fas fa-trophy"></i> Progress to Next Level</h3>
+                    <div class="progress-info">
+                        <span id="currentXP">0</span> / <span id="nextLevelXP">100</span> XP
+                        <span class="progress-percent" id="progressPercent">0%</span>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="level-info">
+                    <span class="level-label">Level <span id="levelNumber">1</span></span>
+                    <span class="xp-label" id="xpNeeded">100 XP to next level</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Score Display -->
+        <div class="score-container">
+            <div class="score-card">
+                <h2 class="score-label">Total Score</h2>
+                <div class="score-value" id="score">0</div>
+                <div class="score-controls">
+                    <button class="score-btn minus" onclick="updateScore(-10)">
+                        <i class="fas fa-minus"></i> 10
+                    </button>
+                    <button class="score-btn reset" onclick="resetScore()">
+                        <i class="fas fa-redo"></i> Reset Score
+                    </button>
+                    <button class="score-btn plus" onclick="updateScore(10)">
+                        <i class="fas fa-plus"></i> 10
+                    </button>
+                </div>
+                <div class="stats-summary">
+                    <div class="stat-summary">
+                        <i class="fas fa-fire streak-icon"></i>
+                        <span>Streak: <strong id="streakSummary">0</strong> days</span>
+                    </div>
+                    <div class="stat-summary">
+                        <i class="fas fa-star level-icon"></i>
+                        <span>Level: <strong id="levelSummary">1</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Instructions -->
+        <div class="instructions">
+            <div class="instructions-content">
+                <i class="fas fa-info-circle"></i>
+                <span>Click buttons to score | Right-click to edit | Drag to move | Double-click to delete</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+[file content end]
